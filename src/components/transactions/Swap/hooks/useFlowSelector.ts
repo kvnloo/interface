@@ -146,9 +146,11 @@ export const healthFactorSensibleSwapFlowSelector = ({
       ? valueToBigNumber(hfAfterSwap).lt(LIQUIDATION_DANGER_THRESHOLD)
       : false;
 
+  // Paraswap can't price or trade aTokens, so a collateral swap can't use the simple aToken path; it must go through the flashloan adapter, which unwraps to the underlying. CoW repay/debt swaps likewise have no non-flashloan path.
   const forceFlashloanFlow =
-    state.provider === SwapProvider.COW_PROTOCOL &&
-    (state.swapType === SwapType.RepayWithCollateral || state.swapType === SwapType.DebtSwap);
+    (state.provider === SwapProvider.COW_PROTOCOL &&
+      (state.swapType === SwapType.RepayWithCollateral || state.swapType === SwapType.DebtSwap)) ||
+    (state.provider === SwapProvider.PARASWAP && state.swapType === SwapType.CollateralSwap);
   const useFlashloan =
     forceFlashloanFlow ||
     (extendedUser?.healthFactor !== '-1' &&
